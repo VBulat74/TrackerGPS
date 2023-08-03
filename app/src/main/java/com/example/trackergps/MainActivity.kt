@@ -2,8 +2,11 @@ package com.example.trackergps
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Toast
 import com.example.trackergps.databinding.ActivityMainBinding
+import com.example.trackergps.fragments.MainFragment
+import com.example.trackergps.fragments.SettingsFragment
+import com.example.trackergps.fragments.TracksFragment
+import com.example.trackergps.utils.openFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -17,14 +20,16 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         onBottomNavClick()
+
+        openFragment(MainFragment.newInstance())
     }
 
     private fun onBottomNavClick() {
         binding.bNav.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.id_settings -> {Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show()}
-                R.id.id_home -> {Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show()}
-                R.id.id_tracks -> {Toast.makeText(this, "Tracks", Toast.LENGTH_SHORT).show()}
+                R.id.id_settings -> openFragment(SettingsFragment.newInstance())
+                R.id.id_home -> openFragment(MainFragment.newInstance())
+                R.id.id_tracks -> openFragment(TracksFragment.newInstance())
             }
             true
         }

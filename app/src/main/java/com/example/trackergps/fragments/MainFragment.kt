@@ -21,6 +21,6 @@ class MainFragment : Fragment() {
 
     companion object {
         @JvmStatic
-        fun mainInstance() = MainFragment()
+        fun newInstance() = MainFragment()
     }
 }

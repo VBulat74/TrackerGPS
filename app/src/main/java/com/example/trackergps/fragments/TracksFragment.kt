@@ -21,6 +21,6 @@ class TracksFragment : Fragment() {
 
     companion object {
         @JvmStatic
-        fun mainInstance() = TracksFragment()
+        fun newInstance() = TracksFragment()
     }
 }
