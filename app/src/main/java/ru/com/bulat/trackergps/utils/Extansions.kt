@@ -16,7 +16,11 @@ fun Fragment.openFragment(f: Fragment) {
 }
 
 fun AppCompatActivity.openFragment(f: Fragment) {
-    Log.d("AAA", "Name fragment: ${f.javaClass}")
+    if (supportFragmentManager.fragments.isNotEmpty()){
+        if (supportFragmentManager.fragments[0].javaClass == f.javaClass) {
+            return
+        }
+    }
     supportFragmentManager
         .beginTransaction()
         .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
