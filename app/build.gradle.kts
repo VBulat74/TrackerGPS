@@ -5,12 +5,13 @@ plugins {
 
 android {
     namespace = "com.example.trackergps"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.trackergps"
         minSdk = 24
-        targetSdk = 33
+        //noinspection EditedTargetSdkVersion
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -41,6 +42,10 @@ android {
 
 dependencies {
 
+    //add Shared preference
+    implementation("androidx.preference:preference-ktx:1.2.0")
+
+    implementation("androidx.savedstate:savedstate-ktx:1.2.1")
     implementation("androidx.core:core-ktx:1.10.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.9.0")

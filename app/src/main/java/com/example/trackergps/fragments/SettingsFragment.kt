@@ -1,26 +1,64 @@
 package com.example.trackergps.fragments
 
+import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.fragment.app.Fragment
-import com.example.trackergps.databinding.FragmentSettingsBinding
+import androidx.preference.Preference
+import androidx.preference.PreferenceFragmentCompat
+import com.example.trackergps.R
 
-class SettingsFragment : Fragment() {
+class SettingsFragment : PreferenceFragmentCompat() {
 
-    private lateinit var binding : FragmentSettingsBinding
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        // Inflate the layout for this fragment
-        binding = FragmentSettingsBinding.inflate(inflater, container, false)
-        return binding.root
+    private lateinit var timePref : Preference
+    private lateinit var colorPref : Preference
+    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        setPreferencesFromResource(R.xml.main_preference, rootKey)
+        init()
     }
 
-    companion object {
-        @JvmStatic
-        fun newInstance() = SettingsFragment()
+    private fun init() {
+        timePref = findPreference("update_time_key")!!
+        colorPref = findPreference("color_key")!!
+        val changeListener = onChangeListener()
+
+        timePref.onPreferenceChangeListener = changeListener
+        colorPref.onPreferenceChangeListener = changeListener
+        initPrefs()
+    }
+
+    private fun onChangeListener () : Preference.OnPreferenceChangeListener {
+        return Preference.OnPreferenceChangeListener{pref, value ->
+            when(pref.key){
+                "update_time_key" -> onTimeChange(value.toString())
+                "color_key" -> onColorChange (value.toString())
+            }
+            true
+        }
+    }
+
+    private fun onColorChange(value: String) {
+        colorPref.icon?.setTint(Color.parseColor(value))
+    }
+
+    private fun onTimeChange(value : String) {
+        val nameArray = resources.getStringArray(R.array.loc_time_update_name)
+        val valueArray = resources.getStringArray(R.array.loc_time_update_value)
+
+        val pos = valueArray.indexOf(value)
+        timePref.title = getString(R.string.update_time_pparam, nameArray[pos])
+    }
+
+    private fun initPrefs(){
+        val pref = timePref.preferenceManager.sharedPreferences
+        val nameArray = resources.getStringArray(R.array.loc_time_update_name)
+        val valueArray = resources.getStringArray(R.array.loc_time_update_value)
+
+        val value = pref?.getString("update_time_key", "3000")
+
+        val pos = valueArray.indexOf(value)
+        timePref.title = getString(R.string.update_time_pparam, nameArray[pos])
+
+
+        val trackColor = pref?.getString("color_key", "#FFFF0000")
+        colorPref.icon?.setTint(Color.parseColor(trackColor))
     }
 }
