@@ -22,9 +22,9 @@ class MainActivity : AppCompatActivity() {
     private fun onBottomNavClick() {
         binding.bNav.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
+                R.id.id_settings -> {Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show()}
                 R.id.id_home -> {Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show()}
                 R.id.id_tracks -> {Toast.makeText(this, "Tracks", Toast.LENGTH_SHORT).show()}
-                R.id.id_settings -> {Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show()}
             }
             true
         }
