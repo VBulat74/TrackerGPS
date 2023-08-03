@@ -1,12 +1,12 @@
-package com.example.trackergps
+package ru.com.bulat.trackergps
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.example.trackergps.databinding.ActivityMainBinding
-import com.example.trackergps.fragments.MainFragment
-import com.example.trackergps.fragments.SettingsFragment
-import com.example.trackergps.fragments.TracksFragment
-import com.example.trackergps.utils.openFragment
+import androidx.appcompat.app.AppCompatActivity
+import ru.com.bulat.trackergps.databinding.ActivityMainBinding
+import ru.com.bulat.trackergps.fragments.MainFragment
+import ru.com.bulat.trackergps.fragments.SettingsFragment
+import ru.com.bulat.trackergps.fragments.TracksFragment
+import ru.com.bulat.trackergps.utils.openFragment
 
 class MainActivity : AppCompatActivity() {
 

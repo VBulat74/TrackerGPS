@@ -1,10 +1,10 @@
-package com.example.trackergps.fragments
+package ru.com.bulat.trackergps.fragments
 
 import android.graphics.Color
 import android.os.Bundle
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import com.example.trackergps.R
+import ru.com.bulat.trackergps.R
 
 class SettingsFragment : PreferenceFragmentCompat() {
 

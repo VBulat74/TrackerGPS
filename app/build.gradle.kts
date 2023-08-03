@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.trackergps"
+    namespace = "ru.com.bulat.trackergps"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.trackergps"
+        applicationId = "ru.com.bulat.trackergps"
         minSdk = 24
         //noinspection EditedTargetSdkVersion
         targetSdk = 34

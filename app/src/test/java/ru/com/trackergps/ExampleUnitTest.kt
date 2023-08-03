@@ -1,4 +1,4 @@
-package com.example.trackergps
+package ru.com.trackergps
 
 import org.junit.Test
 

@@ -1,26 +1,26 @@
-package com.example.trackergps.fragments
+package ru.com.bulat.trackergps.fragments
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.example.trackergps.databinding.FragmentViewTrackBinding
+import ru.com.bulat.trackergps.databinding.FragmentTracksBinding
 
-class ViewTrackFragment : Fragment() {
+class TracksFragment : Fragment() {
 
-    private lateinit var binding : FragmentViewTrackBinding
+    private lateinit var binding : FragmentTracksBinding
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         // Inflate the layout for this fragment
-        binding = FragmentViewTrackBinding.inflate(inflater, container, false)
+        binding = FragmentTracksBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     companion object {
         @JvmStatic
-        fun mainInstance() = ViewTrackFragment()
+        fun newInstance() = TracksFragment()
     }
 }
