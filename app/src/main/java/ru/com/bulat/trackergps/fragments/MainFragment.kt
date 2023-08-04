@@ -1,20 +1,30 @@
 package ru.com.bulat.trackergps.fragments
 
+import android.Manifest
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import org.osmdroid.config.Configuration
 import org.osmdroid.library.BuildConfig
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import ru.com.bulat.trackergps.databinding.FragmentMainBinding
+import ru.com.bulat.trackergps.utils.checkPermission
+import ru.com.bulat.trackergps.utils.showToast
 
 
 class MainFragment : Fragment() {
 
-    private lateinit var binding : FragmentMainBinding
+    private lateinit var pLancher: ActivityResultLauncher<Array<String>>
+    private lateinit var binding: FragmentMainBinding
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -25,15 +35,81 @@ class MainFragment : Fragment() {
         return binding.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        registerPermissions()
+        checkLocPermission()
+    }
+
     private fun settingsOSM() {
         Configuration
             .getInstance()
             .load(
-            (activity as AppCompatActivity),
-            activity?.getSharedPreferences("osm_pref", Context.MODE_PRIVATE),
+                (activity as AppCompatActivity),
+                activity?.getSharedPreferences("osm_pref", Context.MODE_PRIVATE),
             )
 
         Configuration.getInstance().userAgentValue = BuildConfig.LIBRARY_PACKAGE_NAME
+    }
+
+    private fun initOSM() = with(binding) {
+        map.controller.setZoom(20.0)
+
+        val mLocationProvider = GpsMyLocationProvider(activity)
+        val mLocOverlay = MyLocationNewOverlay(mLocationProvider, map)
+        mLocOverlay.enableMyLocation()
+        mLocOverlay.enableFollowLocation()
+        mLocOverlay.runOnFirstFix {
+            map.overlays.clear()
+            map.overlays.add(mLocOverlay)
+        }
+    }
+
+    private fun registerPermissions() {
+        pLancher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+            if (it[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+                initOSM()
+            } else {
+                showToast("Permissions Denied!")
+            }
+        }
+    }
+
+    private fun checkLocPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            checkPermissionAfterQ()
+        } else {
+            checkPermissionBeforeQ()
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun checkPermissionAfterQ() {
+        if (checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+            && checkPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        ) {
+            initOSM()
+        } else {
+            pLancher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                )
+            )
+        }
+    }
+
+    private fun checkPermissionBeforeQ() {
+        if (checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+        ) {
+            initOSM()
+        } else {
+            pLancher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            )
+        }
     }
 
     companion object {
