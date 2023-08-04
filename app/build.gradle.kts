@@ -45,6 +45,10 @@ dependencies {
     //add Shared preference
     implementation("androidx.preference:preference-ktx:1.2.0")
 
+    //add OpenStreetMap
+    implementation ("org.osmdroid:osmdroid-android:6.1.16")
+    implementation ("com.github.MKergall:osmbonuspack:6.9.0")
+
     implementation("androidx.savedstate:savedstate-ktx:1.2.1")
     implementation("androidx.core:core-ktx:1.10.1")
     implementation("androidx.appcompat:appcompat:1.6.1")

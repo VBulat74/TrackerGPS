@@ -7,7 +7,7 @@
     tools:context="ru.com.bulat.trackergps.MainActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/paceHolder"
+        android:id="@+id/placeHolder"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintStart_toStartOf="parent"
