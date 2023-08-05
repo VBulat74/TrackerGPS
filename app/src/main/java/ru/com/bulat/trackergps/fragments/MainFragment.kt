@@ -2,6 +2,7 @@ package ru.com.bulat.trackergps.fragments
 
 import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,20 +11,24 @@ import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import org.osmdroid.config.Configuration
 import org.osmdroid.library.BuildConfig
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import ru.com.bulat.trackergps.databinding.FragmentMainBinding
-import ru.com.bulat.trackergps.utils.checkPermission
 import ru.com.bulat.trackergps.utils.showToast
 
 
 class MainFragment : Fragment() {
 
-    private lateinit var pLancher: ActivityResultLauncher<Array<String>>
+    private lateinit var pLancherLocation: ActivityResultLauncher<Array<String>>
+    private lateinit var pLancherBackGround: ActivityResultLauncher<Array<String>>
+
     private lateinit var binding: FragmentMainBinding
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,7 +43,42 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         registerPermissions()
-        checkLocPermission()
+        checkLocationPermission()
+    }
+
+    private fun registerPermissions() {
+        pLancherLocation =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+                if (it[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+                    // User granted location permission
+                    // Now check if android version >= 11, if >= 11 check for Background Location Permission
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        if (ContextCompat.checkSelfPermission(
+                                requireContext(),
+                                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            initOSM()
+                        } else {
+                            // Ask for Background Location Permission
+                            askPermissionForBackgroundUsage()
+                        }
+                    }
+                } else {
+                    showToast("1 Permissions ACCESS_FINE_LOCATION Denied!")
+                }
+            }
+
+        pLancherBackGround =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+                if (it[Manifest.permission.ACCESS_BACKGROUND_LOCATION] == true) {
+                    initOSM()
+                } else {
+                    initOSM()
+                    showToast("2 Permissions ACCESS_BACKGROUND_LOCATION Denied!")
+                }
+            }
+
     }
 
     private fun settingsOSM() {
@@ -65,54 +105,176 @@ class MainFragment : Fragment() {
         }
     }
 
-    private fun registerPermissions() {
-        pLancher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-            if (it[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
-                initOSM()
-            } else {
-                showToast("Permissions Denied!")
+    private fun checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            // Fine Location permission is granted
+            // Check if current android version >= 11, if >= 11 check for Background Location permission
+            initOSM()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                if (ContextCompat.checkSelfPermission(
+                        requireContext(),
+                        Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    initOSM()
+                } else {
+                    // Ask for Background Location Permission
+                    askPermissionForBackgroundUsage()
+                }
             }
+        } else {
+            // Fine Location Permission is not granted so ask for permission
+            askForLocationPermission()
         }
     }
 
-    private fun checkLocPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            checkPermissionAfterQ()
+    private fun askForLocationPermission() {
+
+        val arrPermission = if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            )
         } else {
-            checkPermissionBeforeQ()
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+            )
+        }
+
+        if (ActivityCompat.shouldShowRequestPermissionRationale(
+                requireActivity(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+        ) {
+            AlertDialog.Builder(requireContext())
+                .setTitle("Permission Needed!")
+                .setMessage("Location Permission Needed!")
+                .setPositiveButton(
+                    "OK"
+                ) { dialog, which ->
+
+                    pLancherLocation.launch(arrPermission)
+
+                    /*ActivityCompat.requestPermissions(
+                        requireActivity(), arrayOf<String>(
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        ), LOCATION_PERMISSION_CODE
+                    )*/
+                }
+                .setNegativeButton("CANCEL") { dialog, which ->
+                    // Permission is denied by the user
+                    showToast("3 Permission ACCESS_FINE_LOCATION is denied by the user")
+                }
+                .create().show()
+        } else {
+            pLancherLocation.launch(arrPermission)
+
+            /*ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_CODE
+            )*/
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
-    private fun checkPermissionAfterQ() {
-        if (checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-            && checkPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-        ) {
-            initOSM()
-        } else {
-            pLancher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                )
+    private fun askPermissionForBackgroundUsage() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(
+                requireActivity(),
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
             )
+        ) {
+            AlertDialog.Builder(requireActivity())
+                .setTitle("Permission Needed!")
+                .setMessage("Background Location Permission Needed!, tap \"Allow all time in the next screen\"")
+                .setPositiveButton(
+                    "OK"
+                ) { dialog, which ->
+
+                    pLancherBackGround.launch(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION))
+
+                    /*ActivityCompat.requestPermissions(
+                        requireActivity(),
+                        arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
+                        BACKGROUND_LOCATION_PERMISSION_CODE
+                    )*/
+                }
+                .setNegativeButton(
+                    "CANCEL"
+                ) { dialog, which ->
+                    // User declined for Background Location Permission.
+                    initOSM()
+                    showToast(" 4 User declined for Background Location Permission")
+                }
+                .create().show()
+        } else {
+            pLancherBackGround.launch(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION))
+
+            /*ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
+                BACKGROUND_LOCATION_PERMISSION_CODE
+            )*/
         }
     }
 
-    private fun checkPermissionBeforeQ() {
-        if (checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-        ) {
-            initOSM()
-        } else {
-            pLancher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            )
+    /*
+        private fun registerPermissions() {
+            pLancher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+                if (it[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+                    initOSM()
+                } else {
+                    showToast("Permissions Denied!")
+                }
+            }
         }
-    }
+
+        private fun checkLocPermission() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                checkPermissionAfterQ()
+            } else {
+                checkPermissionBeforeQ()
+            }
+        }
+
+        @RequiresApi(Build.VERSION_CODES.Q)
+        private fun checkPermissionAfterQ() {
+            if (checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                && checkPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            ) {
+                initOSM()
+            } else {
+                pLancher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                    )
+                )
+            }
+        }
+
+        private fun checkPermissionBeforeQ() {
+            if (checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+            ) {
+                initOSM()
+            } else {
+                pLancher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    )
+                )
+            }
+        }*/
 
     companion object {
+
         @JvmStatic
         fun newInstance() = MainFragment()
     }
