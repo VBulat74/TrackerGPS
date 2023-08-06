@@ -7,7 +7,6 @@ import android.app.Service
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import ru.com.bulat.trackergps.MainActivity
 import ru.com.bulat.trackergps.R
@@ -19,17 +18,17 @@ class LocationService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startNotification()
+        isRunning = true
         return START_STICKY
     }
 
     override fun onCreate() {
         super.onCreate()
-        Log.d("AAA", "Service: onCreate()")
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d("AAA", "Service: onDestroy()")
+        isRunning = false
     }
 
     private fun startNotification() {
@@ -63,7 +62,7 @@ class LocationService : Service() {
 
     companion object {
         const val CHANEL_ID = "chanel_1"
-
+        var isRunning = false
     }
 
 }

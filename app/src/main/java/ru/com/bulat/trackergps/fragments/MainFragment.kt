@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.OnClickListener
 import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,13 +24,15 @@ import org.osmdroid.config.Configuration
 import org.osmdroid.library.BuildConfig
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import ru.com.bulat.trackergps.R
 import ru.com.bulat.trackergps.databinding.FragmentMainBinding
 import ru.com.bulat.trackergps.location.LocationService
 import ru.com.bulat.trackergps.utils.DialogManager
 import ru.com.bulat.trackergps.utils.showToast
 
-
 class MainFragment : Fragment() {
+
+    private var isServiceRunning : Boolean = false
 
     private lateinit var pLancherLocation: ActivityResultLauncher<Array<String>>
     private lateinit var pLancherBackGround: ActivityResultLauncher<Array<String>>
@@ -48,12 +51,56 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         registerPermissions()
+        setOnClicks()
+        checkServiceState()
+    }
 
+    private fun setOnClicks() = with(binding) {
+        val listener = onClicks()
+
+        fbtnStartStop.setOnClickListener(listener)
+        fbtnCenter.setOnClickListener(listener)
+    }
+
+    private fun onClicks() : OnClickListener {
+        return OnClickListener {
+            when(it.id) {
+                R.id.fbtnStartStop -> {checkService()}
+                R.id.fbtnCenter -> {}
+            }
+        }
+    }
+
+    private fun checkServiceState(){
+        isServiceRunning = LocationService.isRunning
+        if (isServiceRunning){
+            binding.fbtnStartStop.setImageResource(R.drawable.ic_stop)
+        } else {
+            binding.fbtnStartStop.setImageResource(R.drawable.ic_play)
+        }
+    }
+
+    private fun checkService() {
+        if (isServiceRunning) {
+            stopLocationService()
+        } else {
+            startLocationService()
+        }
+        isServiceRunning = !isServiceRunning
+    }
+
+    private fun stopLocationService() {
+        requireActivity().stopService(Intent(requireActivity(), LocationService::class.java))
+        binding.fbtnStartStop.setImageResource(R.drawable.ic_play)
+    }
+
+    private fun startLocationService(){
         if  (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             requireActivity().startForegroundService(Intent(requireActivity(), LocationService::class.java))
         } else {
             requireActivity().startService(Intent(requireActivity(), LocationService::class.java))
         }
+        binding.fbtnStartStop.setImageResource(R.drawable.ic_stop)
     }
 
     override fun onResume() {
@@ -299,7 +346,6 @@ class MainFragment : Fragment() {
         }*/
 
     companion object {
-
         @JvmStatic
         fun newInstance() = MainFragment()
     }
