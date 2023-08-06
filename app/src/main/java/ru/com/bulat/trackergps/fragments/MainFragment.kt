@@ -24,6 +24,7 @@ import org.osmdroid.library.BuildConfig
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import ru.com.bulat.trackergps.databinding.FragmentMainBinding
+import ru.com.bulat.trackergps.location.LocationService
 import ru.com.bulat.trackergps.utils.DialogManager
 import ru.com.bulat.trackergps.utils.showToast
 
@@ -48,6 +49,11 @@ class MainFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         registerPermissions()
 
+        if  (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            requireActivity().startForegroundService(Intent(requireActivity(), LocationService::class.java))
+        } else {
+            requireActivity().startService(Intent(requireActivity(), LocationService::class.java))
+        }
     }
 
     override fun onResume() {

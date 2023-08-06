@@ -22,7 +22,7 @@
         android:layout_marginTop="10dp"
         android:layout_marginEnd="10dp"
         android:src="@drawable/ic_center"
-        app:fabSize="mini"
+        app:fabCustomSize="40dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:contentDescription="@string/center" />
@@ -34,7 +34,7 @@
         android:layout_marginTop="10dp"
         android:layout_marginEnd="10dp"
         android:src="@drawable/ic_play"
-        app:fabSize="mini"
+        app:fabCustomSize="40dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/fbtnCenter"
         android:contentDescription="@string/center" />
@@ -48,7 +48,7 @@
         android:background="#80FFFFFF"
         android:paddingStart="5dp"
         android:paddingEnd="5dp"
-        android:text="Time: 00:00:00"
+        tools:text="Time: 00:00:00"
         android:textColor="@color/black"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -61,7 +61,7 @@
         android:background="#80FFFFFF"
         android:paddingStart="5dp"
         android:paddingEnd="5dp"
-        android:text="Average velocity: 3.5 km/h"
+        tools:text="Average velocity: 3.5 km/h"
         android:textColor="@color/black"
         app:layout_constraintStart_toStartOf="@id/tvTime"
         app:layout_constraintTop_toBottomOf="@id/tvTime" />
@@ -74,7 +74,7 @@
         android:background="#80FFFFFF"
         android:paddingStart="5dp"
         android:paddingEnd="5dp"
-        android:text="Velocity: 3.5 km/h"
+        tools:text="Velocity: 3.5 km/h"
         android:textColor="@color/black"
         app:layout_constraintStart_toStartOf="@id/tvTime"
         app:layout_constraintTop_toBottomOf="@id/tvAvrVelocity" />
@@ -87,7 +87,7 @@
         android:background="#80FFFFFF"
         android:paddingStart="5dp"
         android:paddingEnd="5dp"
-        android:text="Distance: 3.5 km"
+        tools:text="Distance: 3.5 km"
         android:textColor="@color/black"
         android:textSize="24sp"
         app:layout_constraintStart_toStartOf="@id/tvTime"
