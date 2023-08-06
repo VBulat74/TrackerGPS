@@ -175,12 +175,12 @@ class MainFragment : Fragment() {
                 .setMessage("Location Permission Needed!")
                 .setPositiveButton(
                     "OK"
-                ) { dialog, which ->
+                ) { _, _ ->
 
                     pLancherLocation.launch(arrPermission)
 
                 }
-                .setNegativeButton("CANCEL") { dialog, which ->
+                .setNegativeButton("CANCEL") { _, _ ->
                     // Permission is denied by the user
                     showToast("3 Permission ACCESS_FINE_LOCATION is denied by the user")
                 }
@@ -203,14 +203,14 @@ class MainFragment : Fragment() {
                 .setMessage("Background Location Permission Needed!, tap \"Allow all time in the next screen\"")
                 .setPositiveButton(
                     "OK"
-                ) { dialog, which ->
+                ) { _, _ ->
 
                     pLancherBackGround.launch(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION))
 
                 }
                 .setNegativeButton(
                     "CANCEL"
-                ) { dialog, which ->
+                ) { _, _ ->
                     // User declined for Background Location Permission.
                     initOSM()
                     showToast(" 4 User declined for Background Location Permission")
