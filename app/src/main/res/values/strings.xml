@@ -10,5 +10,9 @@
     <string name="location">Location</string>
     <string name="track_color">Track color</string>
     <string name="track_color_summary">Chose track color</string>
+    <string name="loaction_disabled">Location disabled</string>
+    <string name="loaction_message">Du you wont enable GPS?</string>
+    <string name="btn_yes">Yes</string>
+    <string name="btn_no">No</string>
 
 </resources>

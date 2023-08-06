@@ -2,9 +2,12 @@ package ru.com.bulat.trackergps.fragments
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,6 +24,7 @@ import org.osmdroid.library.BuildConfig
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import ru.com.bulat.trackergps.databinding.FragmentMainBinding
+import ru.com.bulat.trackergps.utils.DialogManager
 import ru.com.bulat.trackergps.utils.showToast
 
 
@@ -43,6 +47,11 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         registerPermissions()
+
+    }
+
+    override fun onResume() {
+        super.onResume()
         checkLocationPermission()
     }
 
@@ -59,10 +68,15 @@ class MainFragment : Fragment() {
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
                             initOSM()
+                            checkLocationEnabled()
                         } else {
                             // Ask for Background Location Permission
                             askPermissionForBackgroundUsage()
                         }
+                    } else {
+                        initOSM()
+                        checkLocationEnabled()
+
                     }
                 } else {
                     showToast("1 Permissions ACCESS_FINE_LOCATION Denied!")
@@ -73,8 +87,10 @@ class MainFragment : Fragment() {
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
                 if (it[Manifest.permission.ACCESS_BACKGROUND_LOCATION] == true) {
                     initOSM()
+                    checkLocationEnabled()
                 } else {
                     initOSM()
+                    checkLocationEnabled()
                     showToast("2 Permissions ACCESS_BACKGROUND_LOCATION Denied!")
                 }
             }
@@ -114,6 +130,7 @@ class MainFragment : Fragment() {
             // Fine Location permission is granted
             // Check if current android version >= 11, if >= 11 check for Background Location permission
             initOSM()
+            checkLocationEnabled()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 if (ContextCompat.checkSelfPermission(
                         requireContext(),
@@ -121,6 +138,7 @@ class MainFragment : Fragment() {
                     ) == PackageManager.PERMISSION_GRANTED
                 ) {
                     initOSM()
+                    checkLocationEnabled()
                 } else {
                     // Ask for Background Location Permission
                     askPermissionForBackgroundUsage()
@@ -161,11 +179,6 @@ class MainFragment : Fragment() {
 
                     pLancherLocation.launch(arrPermission)
 
-                    /*ActivityCompat.requestPermissions(
-                        requireActivity(), arrayOf<String>(
-                            Manifest.permission.ACCESS_FINE_LOCATION
-                        ), LOCATION_PERMISSION_CODE
-                    )*/
                 }
                 .setNegativeButton("CANCEL") { dialog, which ->
                     // Permission is denied by the user
@@ -175,11 +188,6 @@ class MainFragment : Fragment() {
         } else {
             pLancherLocation.launch(arrPermission)
 
-            /*ActivityCompat.requestPermissions(
-                requireActivity(),
-                arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION),
-                LOCATION_PERMISSION_CODE
-            )*/
         }
     }
 
@@ -199,11 +207,6 @@ class MainFragment : Fragment() {
 
                     pLancherBackGround.launch(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION))
 
-                    /*ActivityCompat.requestPermissions(
-                        requireActivity(),
-                        arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
-                        BACKGROUND_LOCATION_PERMISSION_CODE
-                    )*/
                 }
                 .setNegativeButton(
                     "CANCEL"
@@ -216,12 +219,28 @@ class MainFragment : Fragment() {
         } else {
             pLancherBackGround.launch(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION))
 
-            /*ActivityCompat.requestPermissions(
-                requireActivity(),
-                arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
-                BACKGROUND_LOCATION_PERMISSION_CODE
-            )*/
         }
+    }
+
+    private fun  checkLocationEnabled() {
+
+        val locManager = activity?.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val isEnabled = locManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+
+        if (!isEnabled) {
+            DialogManager.showDialogLocationEnabled(
+                activity as AppCompatActivity,
+                object : DialogManager.Listener {
+                    override fun onClick() {
+                        startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                    }
+                }
+            )
+        } else {
+            showToast("Location enabled")
+        }
+
+
     }
 
     /*
