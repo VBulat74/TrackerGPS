@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.MutableLiveData
 import org.osmdroid.config.Configuration
 import org.osmdroid.library.BuildConfig
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
@@ -28,11 +29,18 @@ import ru.com.bulat.trackergps.R
 import ru.com.bulat.trackergps.databinding.FragmentMainBinding
 import ru.com.bulat.trackergps.location.LocationService
 import ru.com.bulat.trackergps.utils.DialogManager
+import ru.com.bulat.trackergps.utils.TimeUtils
 import ru.com.bulat.trackergps.utils.showToast
+import java.util.Timer
+import java.util.TimerTask
 
 class MainFragment : Fragment() {
 
-    private var isServiceRunning : Boolean = false
+    private var isServiceRunning: Boolean = false
+    private var timer: Timer? = null
+    private var startTime = 0L
+
+    private val timeData = MutableLiveData<String>()
 
     private lateinit var pLancherLocation: ActivityResultLauncher<Array<String>>
     private lateinit var pLancherBackGround: ActivityResultLauncher<Array<String>>
@@ -53,6 +61,13 @@ class MainFragment : Fragment() {
         registerPermissions()
         setOnClicks()
         checkServiceState()
+        updateTime()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        checkLocationPermission()
+
     }
 
     private fun setOnClicks() = with(binding) {
@@ -62,19 +77,52 @@ class MainFragment : Fragment() {
         fbtnCenter.setOnClickListener(listener)
     }
 
-    private fun onClicks() : OnClickListener {
+    private fun onClicks(): OnClickListener {
         return OnClickListener {
-            when(it.id) {
-                R.id.fbtnStartStop -> {checkService()}
+            when (it.id) {
+                R.id.fbtnStartStop -> {
+                    checkService()
+                }
+
                 R.id.fbtnCenter -> {}
             }
         }
     }
 
-    private fun checkServiceState(){
+    private fun updateTime() {
+        timeData.observe(viewLifecycleOwner) {
+            binding.tvTime.text = it
+        }
+    }
+
+    private fun startTimer() {
+        timer?.cancel()
+        timer = Timer()
+
+        startTime = LocationService.startTime
+
+        timer?.schedule(
+            object : TimerTask() {
+            override fun run() {
+                requireActivity().runOnUiThread {
+                    timeData.value = "Time: ${getCurrentTime()}"
+                }
+            }
+
+        },
+            1000,
+            1000)
+    }
+
+    private fun getCurrentTime(): String {
+        return TimeUtils.getTime(System.currentTimeMillis() - startTime)
+    }
+
+    private fun checkServiceState() {
         isServiceRunning = LocationService.isRunning
-        if (isServiceRunning){
+        if (isServiceRunning) {
             binding.fbtnStartStop.setImageResource(R.drawable.ic_stop)
+            startTimer()
         } else {
             binding.fbtnStartStop.setImageResource(R.drawable.ic_play)
         }
@@ -90,22 +138,25 @@ class MainFragment : Fragment() {
     }
 
     private fun stopLocationService() {
-        requireActivity().stopService(Intent(requireActivity(), LocationService::class.java))
+        activity?.stopService(Intent(activity, LocationService::class.java))
         binding.fbtnStartStop.setImageResource(R.drawable.ic_play)
+        timer?.cancel()
     }
 
-    private fun startLocationService(){
-        if  (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            requireActivity().startForegroundService(Intent(requireActivity(), LocationService::class.java))
+    private fun startLocationService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            activity?.startForegroundService(
+                Intent(
+                    activity,
+                    LocationService::class.java
+                )
+            )
         } else {
-            requireActivity().startService(Intent(requireActivity(), LocationService::class.java))
+            activity?.startService(Intent(activity, LocationService::class.java))
         }
         binding.fbtnStartStop.setImageResource(R.drawable.ic_stop)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        checkLocationPermission()
+        LocationService.startTime = System.currentTimeMillis()
+        startTimer()
     }
 
     private fun registerPermissions() {
@@ -275,7 +326,7 @@ class MainFragment : Fragment() {
         }
     }
 
-    private fun  checkLocationEnabled() {
+    private fun checkLocationEnabled() {
 
         val locManager = activity?.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val isEnabled = locManager.isProviderEnabled(LocationManager.GPS_PROVIDER)

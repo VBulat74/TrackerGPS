@@ -48,7 +48,7 @@
         android:background="#80FFFFFF"
         android:paddingStart="5dp"
         android:paddingEnd="5dp"
-        tools:text="Time: 00:00:00"
+        android:text="@string/timer_string"
         android:textColor="@color/black"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

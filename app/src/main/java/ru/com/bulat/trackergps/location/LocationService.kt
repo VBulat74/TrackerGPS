@@ -24,6 +24,7 @@ class LocationService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+
     }
 
     override fun onDestroy() {
@@ -63,6 +64,7 @@ class LocationService : Service() {
     companion object {
         const val CHANEL_ID = "chanel_1"
         var isRunning = false
+        var startTime = 0L
     }
 
 }

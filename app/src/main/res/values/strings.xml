@@ -16,5 +16,6 @@
     <string name="btn_no">No</string>
     <string name="center">Center</string>
     <string name="tracker_running">Tracker running!</string>
+    <string name="timer_string">Time: 00:00:00</string>
 
 </resources>
