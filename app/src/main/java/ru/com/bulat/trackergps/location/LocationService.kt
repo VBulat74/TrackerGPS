@@ -7,6 +7,7 @@ import android.app.Service
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import ru.com.bulat.trackergps.MainActivity
 import ru.com.bulat.trackergps.R
@@ -17,27 +18,31 @@ class LocationService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d("AAA","LocalService onStartCommand: isRunning = $isRunning; startTime = ${startTime}")
         startNotification()
         isRunning = true
         return START_STICKY
     }
 
     override fun onCreate() {
+        Log.d("AAA","LocalService onCreate isRunning = $isRunning; startTime = $startTime")
         super.onCreate()
 
     }
 
     override fun onDestroy() {
+        Log.d("AAA","LocalService onDestroy isRunning = $isRunning; isRunning = $startTime")
         super.onDestroy()
         isRunning = false
     }
+
 
     private fun startNotification() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val nChanel = NotificationChannel(
                 CHANEL_ID,
                 "Location Service",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_NONE,
 
             )
             val nManager = getSystemService(NotificationManager::class.java) as NotificationManager

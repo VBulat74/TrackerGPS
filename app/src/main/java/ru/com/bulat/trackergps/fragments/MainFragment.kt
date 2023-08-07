@@ -8,6 +8,7 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.OnClickListener
@@ -50,6 +51,7 @@ class MainFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        Log.d("AAA", "onCreateView isRunning = ${LocationService.isRunning} startTime = ${LocationService.startTime}")
         settingsOSM()
         // Inflate the layout for this fragment
         binding = FragmentMainBinding.inflate(inflater, container, false)
@@ -58,16 +60,38 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        Log.d("AAA", "onViewCreated isRunning = ${LocationService.isRunning} startTime = ${LocationService.startTime}")
         registerPermissions()
         setOnClicks()
         checkServiceState()
         updateTime()
     }
 
+    override fun onStart() {
+        Log.d("AAA", "onStart isRunning = ${LocationService.isRunning} startTime = ${LocationService.startTime}")
+        super.onStart()
+    }
+
     override fun onResume() {
+        Log.d("AAA", "onResume isRunning = ${LocationService.isRunning} startTime = ${LocationService.startTime}")
         super.onResume()
         checkLocationPermission()
 
+    }
+
+    override fun onPause() {
+        Log.d("AAA", "onResume isRunning = ${LocationService.isRunning} startTime = ${LocationService.startTime}")
+        super.onPause()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.d("AAA", "onStop isRunning = ${LocationService.isRunning} startTime = ${LocationService.startTime}")
+    }
+
+    override fun onDestroy() {
+        Log.d("AAA", "onDestroy isRunning = ${LocationService.isRunning} startTime = ${LocationService.startTime}")
+        super.onDestroy()
     }
 
     private fun setOnClicks() = with(binding) {
@@ -104,7 +128,7 @@ class MainFragment : Fragment() {
         timer?.schedule(
             object : TimerTask() {
             override fun run() {
-                requireActivity().runOnUiThread {
+                activity?.runOnUiThread {
                     timeData.value = "Time: ${getCurrentTime()}"
                 }
             }
