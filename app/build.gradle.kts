@@ -49,6 +49,9 @@ dependencies {
     implementation ("org.osmdroid:osmdroid-android:6.1.16")
     implementation ("com.github.MKergall:osmbonuspack:6.9.0")
 
+    //add FusedLocationUpdate
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+
     implementation("androidx.savedstate:savedstate-ktx:1.2.1")
     implementation("androidx.core:core-ktx:1.10.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
