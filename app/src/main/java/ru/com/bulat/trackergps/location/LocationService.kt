@@ -7,12 +7,14 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Granularity
 import com.google.android.gms.location.LocationCallback
@@ -20,13 +22,18 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY
+import org.osmdroid.util.GeoPoint
 import ru.com.bulat.trackergps.MainActivity
 import ru.com.bulat.trackergps.R
 
 class LocationService : Service() {
 
-    private lateinit var locProvider : FusedLocationProviderClient
-    private lateinit var locRequest : LocationRequest
+    private var lastLocation: Location? = null
+    private var distance = 0.0f
+    private lateinit var geoPointsList: ArrayList<GeoPoint>
+
+    private lateinit var locProvider: FusedLocationProviderClient
+    private lateinit var locRequest: LocationRequest
 
     override fun onBind(p0: Intent?): IBinder? {
         return null
@@ -41,6 +48,7 @@ class LocationService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        geoPointsList = ArrayList()
         initLocation()
     }
 
@@ -58,7 +66,7 @@ class LocationService : Service() {
                 "Location Service",
                 NotificationManager.IMPORTANCE_NONE,
 
-            )
+                )
             val nManager = getSystemService(NotificationManager::class.java) as NotificationManager
             nManager.createNotificationChannel(nChanel)
         }
@@ -83,11 +91,38 @@ class LocationService : Service() {
     private val locCallBack = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             super.onLocationResult(locationResult)
-            Log.d("AAA", "Location (${locationResult.lastLocation?.latitude}, ${locationResult.lastLocation?.longitude})")
+            val currentLocation = locationResult.lastLocation
+            if (lastLocation != null && currentLocation != null) {
+                //if (currentLocation.speed > 0.2) {
+                distance += lastLocation!!.distanceTo(lastLocation!!)
+                //}
+                geoPointsList.add(GeoPoint(currentLocation.latitude, currentLocation.longitude))
+                val locationModel = LocationModel(
+                    currentLocation.speed,
+                    distance,
+                    geoPointsList
+                )
+                sendLocationData(locationModel)
+            }
+            lastLocation = currentLocation
+
+
+            Log.d(
+                "AAA",
+                "Distance: ${distance}; Location (${currentLocation?.latitude}, ${currentLocation?.longitude})"
+            )
         }
     }
 
-    private fun initLocation(){
+    private fun sendLocationData(locationModel: LocationModel) {
+        val intent = Intent (LOCATION_MODEL_INTENT)
+        intent.putExtra(LOCATION_MODEL_INTENT, locationModel)
+        LocalBroadcastManager
+            .getInstance(applicationContext)
+            .sendBroadcast(intent)
+    }
+
+    private fun initLocation() {
         /*locRequest =  LocationRequest.create().apply {
             interval = 5000
             fastestInterval = 5000
@@ -104,7 +139,7 @@ class LocationService : Service() {
         locProvider = LocationServices.getFusedLocationProviderClient(baseContext)
     }
 
-    private fun startLocationUpdate(){
+    private fun startLocationUpdate() {
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -120,6 +155,7 @@ class LocationService : Service() {
     }
 
     companion object {
+        const val LOCATION_MODEL_INTENT = "location_intent"
         const val CHANEL_ID = "chanel_1"
         var isRunning = false
         var startTime = 0L
