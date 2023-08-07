@@ -19,7 +19,7 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
+import com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY
 import ru.com.bulat.trackergps.MainActivity
 import ru.com.bulat.trackergps.R
 
@@ -95,7 +95,7 @@ class LocationService : Service() {
         }*/
 
 
-        locRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000).apply {
+        locRequest = LocationRequest.Builder(PRIORITY_HIGH_ACCURACY, 5000).apply {
             setGranularity(Granularity.GRANULARITY_FINE)
             setWaitForAccurateLocation(true)
         }.build()
