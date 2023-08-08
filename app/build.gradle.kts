@@ -5,13 +5,13 @@ plugins {
 
 android {
     namespace = "ru.com.bulat.trackergps"
-    compileSdk = 34
+    compileSdk = 33
 
     defaultConfig {
         applicationId = "ru.com.bulat.trackergps"
         minSdk = 24
         //noinspection EditedTargetSdkVersion
-        targetSdk = 34
+        targetSdk = 33
         versionCode = 1
         versionName = "1.0"
 

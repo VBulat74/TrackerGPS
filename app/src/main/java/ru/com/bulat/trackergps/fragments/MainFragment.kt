@@ -1,8 +1,10 @@
 package ru.com.bulat.trackergps.fragments
 
 import android.Manifest
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Build
@@ -22,12 +24,14 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.osmdroid.config.Configuration
 import org.osmdroid.library.BuildConfig
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import ru.com.bulat.trackergps.R
 import ru.com.bulat.trackergps.databinding.FragmentMainBinding
+import ru.com.bulat.trackergps.location.LocationModel
 import ru.com.bulat.trackergps.location.LocationService
 import ru.com.bulat.trackergps.utils.DialogManager
 import ru.com.bulat.trackergps.utils.TimeUtils
@@ -65,6 +69,7 @@ class MainFragment : Fragment() {
         setOnClicks()
         checkServiceState()
         updateTime()
+        registerLocationReceiver()
     }
 
     override fun onStart() {
@@ -419,6 +424,24 @@ class MainFragment : Fragment() {
                 )
             }
         }*/
+
+    private val receiver = object : BroadcastReceiver(){
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == LocationService.LOCATION_MODEL_INTENT) {
+                val locationModel = intent.getSerializableExtra(
+                    LocationService.LOCATION_MODEL_INTENT
+                ) as LocationModel
+                Log.d("AAA", "LocationModel: ${locationModel}")
+            }
+        }
+    }
+
+    private fun registerLocationReceiver() {
+        val locationFilter = IntentFilter(LocationService.LOCATION_MODEL_INTENT)
+        LocalBroadcastManager
+            .getInstance(activity as AppCompatActivity)
+            .registerReceiver(receiver, locationFilter)
+    }
 
     companion object {
         @JvmStatic

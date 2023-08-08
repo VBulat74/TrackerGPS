@@ -94,7 +94,7 @@ class LocationService : Service() {
             val currentLocation = locationResult.lastLocation
             if (lastLocation != null && currentLocation != null) {
                 //if (currentLocation.speed > 0.2) {
-                distance += lastLocation!!.distanceTo(lastLocation!!)
+                distance += currentLocation.distanceTo(lastLocation!!)
                 //}
                 geoPointsList.add(GeoPoint(currentLocation.latitude, currentLocation.longitude))
                 val locationModel = LocationModel(
@@ -102,15 +102,11 @@ class LocationService : Service() {
                     distance,
                     geoPointsList
                 )
+
+                Log.d ("AAA", "distance: $distance")
                 sendLocationData(locationModel)
             }
             lastLocation = currentLocation
-
-
-            Log.d(
-                "AAA",
-                "Distance: ${distance}; Location (${currentLocation?.latitude}, ${currentLocation?.longitude})"
-            )
         }
     }
 
