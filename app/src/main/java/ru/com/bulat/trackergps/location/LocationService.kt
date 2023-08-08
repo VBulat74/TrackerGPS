@@ -103,7 +103,6 @@ class LocationService : Service() {
                     geoPointsList
                 )
 
-                Log.d ("AAA", "distance: $distance")
                 sendLocationData(locationModel)
             }
             lastLocation = currentLocation

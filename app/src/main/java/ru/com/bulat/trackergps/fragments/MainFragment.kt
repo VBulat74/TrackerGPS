@@ -23,12 +23,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MutableLiveData
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.osmdroid.config.Configuration
 import org.osmdroid.library.BuildConfig
+import org.osmdroid.util.Distance
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import ru.com.bulat.trackergps.MaimViewModel
 import ru.com.bulat.trackergps.R
 import ru.com.bulat.trackergps.databinding.FragmentMainBinding
 import ru.com.bulat.trackergps.location.LocationModel
@@ -45,17 +48,16 @@ class MainFragment : Fragment() {
     private var timer: Timer? = null
     private var startTime = 0L
 
-    private val timeData = MutableLiveData<String>()
-
     private lateinit var pLancherLocation: ActivityResultLauncher<Array<String>>
     private lateinit var pLancherBackGround: ActivityResultLauncher<Array<String>>
+
+    private val viewModel : MaimViewModel by activityViewModels()
 
     private lateinit var binding: FragmentMainBinding
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        Log.d("AAA", "onCreateView isRunning = ${LocationService.isRunning} startTime = ${LocationService.startTime}")
         settingsOSM()
         // Inflate the layout for this fragment
         binding = FragmentMainBinding.inflate(inflater, container, false)
@@ -64,38 +66,33 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Log.d("AAA", "onViewCreated isRunning = ${LocationService.isRunning} startTime = ${LocationService.startTime}")
         registerPermissions()
         setOnClicks()
         checkServiceState()
         updateTime()
         registerLocationReceiver()
+        locationUpdate()
     }
 
     override fun onStart() {
-        Log.d("AAA", "onStart isRunning = ${LocationService.isRunning} startTime = ${LocationService.startTime}")
         super.onStart()
     }
 
     override fun onResume() {
-        Log.d("AAA", "onResume isRunning = ${LocationService.isRunning} startTime = ${LocationService.startTime}")
         super.onResume()
         checkLocationPermission()
 
     }
 
     override fun onPause() {
-        Log.d("AAA", "onResume isRunning = ${LocationService.isRunning} startTime = ${LocationService.startTime}")
         super.onPause()
     }
 
     override fun onStop() {
         super.onStop()
-        Log.d("AAA", "onStop isRunning = ${LocationService.isRunning} startTime = ${LocationService.startTime}")
     }
 
     override fun onDestroy() {
-        Log.d("AAA", "onDestroy isRunning = ${LocationService.isRunning} startTime = ${LocationService.startTime}")
         super.onDestroy()
     }
 
@@ -118,10 +115,25 @@ class MainFragment : Fragment() {
         }
     }
 
+    private fun locationUpdate() = with(binding) {
+        viewModel.locationUpdate.observe(viewLifecycleOwner) { locationModel ->
+            val distance = getString(R.string.distance, String.format("%.1f", locationModel.distance))
+            val velocity = getString(R.string.velocity, String.format("%.1f", 3.6f * locationModel.velocity))
+            val averageVelocity = getString(R.string.averge_velocity, getAverageVelocity(locationModel.distance))
+            tvDistance.text = distance
+            tvVelocity.text = velocity
+            tvAvrVelocity.text = averageVelocity
+        }
+    }
+
     private fun updateTime() {
-        timeData.observe(viewLifecycleOwner) {
+        viewModel.timeData.observe(viewLifecycleOwner) {
             binding.tvTime.text = it
         }
+    }
+
+    private fun getAverageVelocity (distance: Float) : String {
+        return String.format("%.1f", 3.6f*(distance / ((System.currentTimeMillis()- startTime)/1000.0f)))
     }
 
     private fun startTimer() {
@@ -132,15 +144,16 @@ class MainFragment : Fragment() {
 
         timer?.schedule(
             object : TimerTask() {
-            override fun run() {
-                activity?.runOnUiThread {
-                    timeData.value = "Time: ${getCurrentTime()}"
+                override fun run() {
+                    activity?.runOnUiThread {
+                        viewModel.timeData.value = "Time: ${getCurrentTime()}"
+                    }
                 }
-            }
 
-        },
+            },
             1000,
-            1000)
+            1000
+        )
     }
 
     private fun getCurrentTime(): String {
@@ -425,13 +438,14 @@ class MainFragment : Fragment() {
             }
         }*/
 
-    private val receiver = object : BroadcastReceiver(){
+    private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == LocationService.LOCATION_MODEL_INTENT) {
                 val locationModel = intent.getSerializableExtra(
-                    LocationService.LOCATION_MODEL_INTENT
+                    LocationService.LOCATION_MODEL_INTENT,
                 ) as LocationModel
-                Log.d("AAA", "LocationModel: ${locationModel}")
+
+                viewModel.locationUpdate.value = locationModel
             }
         }
     }
