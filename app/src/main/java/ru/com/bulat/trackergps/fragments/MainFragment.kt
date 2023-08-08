@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
@@ -29,6 +30,8 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.osmdroid.config.Configuration
 import org.osmdroid.library.BuildConfig
 import org.osmdroid.util.Distance
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import ru.com.bulat.trackergps.MaimViewModel
@@ -43,8 +46,11 @@ import java.util.Timer
 import java.util.TimerTask
 
 class MainFragment : Fragment() {
+    
+    private var polyline : Polyline? = null
 
     private var isServiceRunning: Boolean = false
+    private var firstStart : Boolean = true
     private var timer: Timer? = null
     private var startTime = 0L
 
@@ -92,6 +98,13 @@ class MainFragment : Fragment() {
         super.onStop()
     }
 
+    override fun onDetach() {
+        super.onDetach()
+        LocalBroadcastManager
+            .getInstance(activity as AppCompatActivity)
+            .unregisterReceiver(receiver)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
     }
@@ -123,6 +136,7 @@ class MainFragment : Fragment() {
             tvDistance.text = distance
             tvVelocity.text = velocity
             tvAvrVelocity.text = averageVelocity
+            updatePolyline(locationModel.geoPointsList)
         }
     }
 
@@ -257,6 +271,9 @@ class MainFragment : Fragment() {
     private fun initOSM() = with(binding) {
         map.controller.setZoom(20.0)
 
+        polyline = Polyline()
+        polyline?.outlinePaint?.color = Color.RED
+
         val mLocationProvider = GpsMyLocationProvider(activity)
         val mLocOverlay = MyLocationNewOverlay(mLocationProvider, map)
         mLocOverlay.enableMyLocation()
@@ -264,6 +281,7 @@ class MainFragment : Fragment() {
         mLocOverlay.runOnFirstFix {
             map.overlays.clear()
             map.overlays.add(mLocOverlay)
+            map.overlays.add(polyline)
         }
     }
 
@@ -455,6 +473,25 @@ class MainFragment : Fragment() {
         LocalBroadcastManager
             .getInstance(activity as AppCompatActivity)
             .registerReceiver(receiver, locationFilter)
+    }
+
+    private fun addPointsPolyline (list: List<GeoPoint>) {
+        polyline?.addPoint(list[list.size-1])
+    }
+
+    private fun fillPolyline(list: List<GeoPoint>){
+        list.forEach { geoPoint ->
+            polyline?.addPoint(geoPoint)
+        }
+    }
+
+    private fun updatePolyline(list: List<GeoPoint>){
+        if (list.size > 1 && firstStart) {
+            fillPolyline(list)
+            firstStart = false
+        } else {
+            addPointsPolyline(list)
+        }
     }
 
     companion object {
