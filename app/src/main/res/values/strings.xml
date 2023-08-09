@@ -20,5 +20,11 @@
     <string name="distance">Distance: %1$s m</string>
     <string name="averge_velocity">Average velocity: %1$s km/h</string>
     <string name="velocity">Velocity: %1$s km/h</string>
+    <string name="save_thith_track">Save thith Track?</string>
+    <string name="save_dialog_time">Time:</string>
+    <string name="save_dialog_velocity">Velocity:</string>
+    <string name="save_dialog_distance">Distance:</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
 
 </resources>
