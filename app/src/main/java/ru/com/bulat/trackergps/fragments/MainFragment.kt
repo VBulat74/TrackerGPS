@@ -37,6 +37,7 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import ru.com.bulat.trackergps.MaimViewModel
 import ru.com.bulat.trackergps.R
 import ru.com.bulat.trackergps.databinding.FragmentMainBinding
+import ru.com.bulat.trackergps.db.TrackItem
 import ru.com.bulat.trackergps.location.LocationModel
 import ru.com.bulat.trackergps.location.LocationService
 import ru.com.bulat.trackergps.utils.DialogManager
@@ -48,6 +49,7 @@ import java.util.TimerTask
 class MainFragment : Fragment() {
     
     private var polyline : Polyline? = null
+    private var trackItem : TrackItem? = null
 
     private var isServiceRunning: Boolean = false
     private var firstStart : Boolean = true
@@ -136,6 +138,16 @@ class MainFragment : Fragment() {
             tvDistance.text = distance
             tvVelocity.text = velocity
             tvAvrVelocity.text = averageVelocity
+
+            trackItem = TrackItem(
+                id = null,
+                time = "${getCurrentTime()} s",
+                date = TimeUtils.getDate(),
+                distance = "${String.format("%.1f", locationModel.distance/1000.0f)} km",
+                velocity = "${getAverageVelocity(locationModel.distance)} km/h",
+                "",
+            )
+
             updatePolyline(locationModel.geoPointsList)
         }
     }
@@ -197,6 +209,11 @@ class MainFragment : Fragment() {
         activity?.stopService(Intent(activity, LocationService::class.java))
         binding.fbtnStartStop.setImageResource(R.drawable.ic_play)
         timer?.cancel()
+        DialogManager.showSaveDialog(requireContext(), trackItem, object  : DialogManager.Listener {
+            override fun onClick() {
+                showToast("Track Saved")
+            }
+        })
     }
 
     private fun startLocationService() {
