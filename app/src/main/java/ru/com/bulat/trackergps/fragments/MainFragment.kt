@@ -25,16 +25,15 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.MutableLiveData
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.osmdroid.config.Configuration
 import org.osmdroid.library.BuildConfig
-import org.osmdroid.util.Distance
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import ru.com.bulat.trackergps.MaimViewModel
+import ru.com.bulat.trackergps.MainApp
+import ru.com.bulat.trackergps.MainViewModel
 import ru.com.bulat.trackergps.R
 import ru.com.bulat.trackergps.databinding.FragmentMainBinding
 import ru.com.bulat.trackergps.db.TrackItem
@@ -49,17 +48,21 @@ import java.util.TimerTask
 class MainFragment : Fragment() {
     
     private var polyline : Polyline? = null
-    private var trackItem : TrackItem? = null
+    private var locationModel : LocationModel? = null
 
     private var isServiceRunning: Boolean = false
     private var firstStart : Boolean = true
     private var timer: Timer? = null
     private var startTime = 0L
 
-    private lateinit var pLancherLocation: ActivityResultLauncher<Array<String>>
-    private lateinit var pLancherBackGround: ActivityResultLauncher<Array<String>>
+    private lateinit var pLauncherLocation: ActivityResultLauncher<Array<String>>
+    private lateinit var pLauncherBackGround: ActivityResultLauncher<Array<String>>
 
-    private val viewModel : MaimViewModel by activityViewModels()
+    private val viewModel : MainViewModel by activityViewModels {
+        MainViewModel.ViewModelFactory(
+            (requireContext().applicationContext as MainApp).database
+        )
+    }
 
     private lateinit var binding: FragmentMainBinding
     override fun onCreateView(
@@ -80,6 +83,9 @@ class MainFragment : Fragment() {
         updateTime()
         registerLocationReceiver()
         locationUpdate()
+        viewModel.tracks.observe(viewLifecycleOwner) { trackItemList ->
+            Log.d("AAA", "List size : ${trackItemList.size} items")
+        }
     }
 
     override fun onStart() {
@@ -131,24 +137,17 @@ class MainFragment : Fragment() {
     }
 
     private fun locationUpdate() = with(binding) {
-        viewModel.locationUpdate.observe(viewLifecycleOwner) { locationModel ->
-            val distance = getString(R.string.distance, String.format("%.1f", locationModel.distance))
-            val velocity = getString(R.string.velocity, String.format("%.1f", 3.6f * locationModel.velocity))
-            val averageVelocity = getString(R.string.averge_velocity, getAverageVelocity(locationModel.distance))
+        viewModel.locationUpdate.observe(viewLifecycleOwner) { locModel ->
+            val distance = getString(R.string.distance, String.format("%.1f", locModel.distance))
+            val velocity = getString(R.string.velocity, String.format("%.1f", 3.6f * locModel.velocity))
+            val averageVelocity = getString(R.string.averge_velocity, getAverageVelocity(locModel.distance))
             tvDistance.text = distance
             tvVelocity.text = velocity
             tvAvrVelocity.text = averageVelocity
 
-            trackItem = TrackItem(
-                id = null,
-                time = "${getCurrentTime()} s",
-                date = TimeUtils.getDate(),
-                distance = "${String.format("%.1f", locationModel.distance/1000.0f)} km",
-                velocity = "${getAverageVelocity(locationModel.distance)} km/h",
-                "",
-            )
+            locationModel = locModel
 
-            updatePolyline(locationModel.geoPointsList)
+            updatePolyline(locModel.geoPointsList)
         }
     }
 
@@ -182,6 +181,16 @@ class MainFragment : Fragment() {
         )
     }
 
+    private fun getPointsToString (list: List<GeoPoint>) : String {
+        val stringBuilder = StringBuilder()
+        list.forEach { geoPoint ->
+            stringBuilder.append("${geoPoint.latitude},${geoPoint.longitude}/")
+        }
+
+        Log.d ("AAA", stringBuilder.toString())
+        return stringBuilder.toString()
+    }
+
     private fun getCurrentTime(): String {
         return TimeUtils.getTime(System.currentTimeMillis() - startTime)
     }
@@ -209,11 +218,29 @@ class MainFragment : Fragment() {
         activity?.stopService(Intent(activity, LocationService::class.java))
         binding.fbtnStartStop.setImageResource(R.drawable.ic_play)
         timer?.cancel()
-        DialogManager.showSaveDialog(requireContext(), trackItem, object  : DialogManager.Listener {
+        val track = getTrackItem()
+        DialogManager.showSaveDialog(requireContext(), track, object  : DialogManager.Listener {
             override fun onClick() {
-                showToast("Track Saved")
+                viewModel.insertTrack(track)
             }
         })
+    }
+
+    private fun getTrackItem() : TrackItem {
+        return TrackItem(
+            id = null,
+            time = getString(R.string.save_dialog_time_s, getCurrentTime()),
+            date = TimeUtils.getDate(),
+            distance = getString(
+                R.string.save_dialog_distance_km,
+                String.format("%.1f", locationModel?.distance?.div(1000.0f) ?: 0)
+            ),
+            velocity = getString(
+                R.string.save_dialog_velocity_avr,
+                getAverageVelocity(locationModel?.distance ?: 0.0f)
+            ),
+            getPointsToString(locationModel?.geoPointsList ?: listOf()),
+        )
     }
 
     private fun startLocationService() {
@@ -233,7 +260,7 @@ class MainFragment : Fragment() {
     }
 
     private fun registerPermissions() {
-        pLancherLocation =
+        pLauncherLocation =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
                 if (it[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
                     // User granted location permission
@@ -260,7 +287,7 @@ class MainFragment : Fragment() {
                 }
             }
 
-        pLancherBackGround =
+        pLauncherBackGround =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
                 if (it[Manifest.permission.ACCESS_BACKGROUND_LOCATION] == true) {
                     initOSM()
@@ -358,7 +385,7 @@ class MainFragment : Fragment() {
                     "OK"
                 ) { _, _ ->
 
-                    pLancherLocation.launch(arrPermission)
+                    pLauncherLocation.launch(arrPermission)
 
                 }
                 .setNegativeButton("CANCEL") { _, _ ->
@@ -367,7 +394,7 @@ class MainFragment : Fragment() {
                 }
                 .create().show()
         } else {
-            pLancherLocation.launch(arrPermission)
+            pLauncherLocation.launch(arrPermission)
 
         }
     }
@@ -386,7 +413,7 @@ class MainFragment : Fragment() {
                     "OK"
                 ) { _, _ ->
 
-                    pLancherBackGround.launch(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION))
+                    pLauncherBackGround.launch(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION))
 
                 }
                 .setNegativeButton(
@@ -398,7 +425,7 @@ class MainFragment : Fragment() {
                 }
                 .create().show()
         } else {
-            pLancherBackGround.launch(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION))
+            pLauncherBackGround.launch(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION))
 
         }
     }

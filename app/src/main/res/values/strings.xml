@@ -26,5 +26,8 @@
     <string name="save_dialog_distance">Distance:</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
+    <string name="save_dialog_time_s">Time:  %1$s s</string>
+    <string name="save_dialog_distance_km">Distance: %1$s km</string>
+    <string name="save_dialog_velocity_avr">Velocity: %1$s km/h</string>
 
 </resources>

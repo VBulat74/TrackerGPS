@@ -32,8 +32,8 @@ object DialogManager {
 
         binding.apply {
             tvTime.text = trackItem?.time
-            tvVelocity.text = trackItem?.velocity.toString()
-            tvDistance.text = trackItem?.distance.toString()
+            tvVelocity.text = trackItem?.velocity
+            tvDistance.text = trackItem?.distance
 
 
             btnSave.setOnClickListener {
