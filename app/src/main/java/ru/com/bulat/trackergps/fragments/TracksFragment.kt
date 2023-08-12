@@ -1,6 +1,7 @@
 package ru.com.bulat.trackergps.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,8 +12,9 @@ import ru.com.bulat.trackergps.MainApp
 import ru.com.bulat.trackergps.MainViewModel
 import ru.com.bulat.trackergps.databinding.FragmentTracksBinding
 import ru.com.bulat.trackergps.db.TrackAdapter
+import ru.com.bulat.trackergps.db.TrackItem
 
-class TracksFragment : Fragment() {
+class TracksFragment : Fragment(), TrackAdapter.Listener {
 
     private lateinit var binding : FragmentTracksBinding
     private lateinit var adapter : TrackAdapter
@@ -38,7 +40,7 @@ class TracksFragment : Fragment() {
     }
 
     private fun initRecycleView() = with(binding){
-        adapter = TrackAdapter()
+        adapter = TrackAdapter(this@TracksFragment)
         rcView.layoutManager = LinearLayoutManager(requireContext())
         rcView.adapter = adapter
     }
@@ -50,6 +52,10 @@ class TracksFragment : Fragment() {
             if (trackItemList.isEmpty()) {binding.tvEmpty.visibility = View.VISIBLE}
             else {binding.tvEmpty.visibility = View.GONE}
         }
+    }
+
+    override fun onClick(track: TrackItem) {
+        viewModel.deleteTrack(track)
     }
 
     companion object {
