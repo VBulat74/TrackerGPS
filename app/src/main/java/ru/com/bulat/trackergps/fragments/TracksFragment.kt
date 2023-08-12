@@ -1,7 +1,6 @@
 package ru.com.bulat.trackergps.fragments
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +12,7 @@ import ru.com.bulat.trackergps.MainViewModel
 import ru.com.bulat.trackergps.databinding.FragmentTracksBinding
 import ru.com.bulat.trackergps.db.TrackAdapter
 import ru.com.bulat.trackergps.db.TrackItem
+import ru.com.bulat.trackergps.utils.openFragment
 
 class TracksFragment : Fragment(), TrackAdapter.Listener {
 
@@ -54,8 +54,16 @@ class TracksFragment : Fragment(), TrackAdapter.Listener {
         }
     }
 
-    override fun onClick(track: TrackItem) {
-        viewModel.deleteTrack(track)
+    override fun onClick(track: TrackItem, type: TrackAdapter.ClickType) {
+        when (type) {
+            TrackAdapter.ClickType.DELETE -> viewModel.deleteTrack(track)
+            TrackAdapter.ClickType.OPEN -> {
+                viewModel.currentTrack.value = track
+                openFragment(ViewTrackFragment.mainInstance())
+            }
+
+        }
+
     }
 
     companion object {

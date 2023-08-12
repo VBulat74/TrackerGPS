@@ -8,7 +8,7 @@
         android:orderInCategory="1"/>
 
     <item
-        android:title="@string/empty"
+        android:title="@string/tracks"
         android:icon="@drawable/ic_tracks"
         android:id="@+id/id_tracks"
         android:orderInCategory="2"/>

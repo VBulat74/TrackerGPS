@@ -11,7 +11,6 @@ import android.location.Location
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
-import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -125,7 +124,7 @@ class LocationService : Service() {
         }*/
 
 
-        locRequest = LocationRequest.Builder(PRIORITY_HIGH_ACCURACY, 5000).apply {
+        locRequest = LocationRequest.Builder(PRIORITY_HIGH_ACCURACY, 1000).apply {
             setGranularity(Granularity.GRANULARITY_FINE)
             setWaitForAccurateLocation(true)
         }.build()
