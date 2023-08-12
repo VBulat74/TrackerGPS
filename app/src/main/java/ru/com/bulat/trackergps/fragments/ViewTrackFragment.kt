@@ -10,6 +10,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import org.osmdroid.config.Configuration
 import org.osmdroid.library.BuildConfig
+import org.osmdroid.util.BoundingBox
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.overlay.Polyline
 import ru.com.bulat.trackergps.MainApp
 import ru.com.bulat.trackergps.MainViewModel
 import ru.com.bulat.trackergps.databinding.FragmentViewTrackBinding
@@ -45,7 +48,30 @@ class ViewTrackFragment : Fragment() {
             tvTime.text = trackItem.time
             tvAvrVelocity.text = trackItem.velocity
             tvDistance.text = trackItem.distance
+
+            val polyline = getPolyline(trackItem.geoPoints)
+            map.overlays.add(polyline)
+            goToStartPosition(polyline)
         }
+    }
+
+    private fun goToStartPosition(polyline: Polyline) {
+        val center = GeoPoint(polyline.bounds.centerLatitude, polyline.bounds.centerLongitude)
+        binding.map.controller.zoomTo(18.0)
+        binding.map.controller.animateTo(center)
+
+        //binding.map.zoomToBoundingBox(polyline.bounds, true)
+    }
+
+    private fun getPolyline (strGeoPoints : String) : Polyline {
+        val polyline = Polyline()
+        val list = strGeoPoints.split("/")
+        list.forEach {
+            if (it.isEmpty()) return@forEach
+            val points = it.split(",")
+            polyline.addPoint(GeoPoint(points[0].toDouble(), points[1].toDouble()))
+        }
+        return polyline
     }
 
     private fun settingsOSM() {
