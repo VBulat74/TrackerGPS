@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">\
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
         android:title="@string/home"
@@ -8,7 +8,7 @@
         android:orderInCategory="1"/>
 
     <item
-        android:title="@string/tracks"
+        android:title="@string/empty"
         android:icon="@drawable/ic_tracks"
         android:id="@+id/id_tracks"
         android:orderInCategory="2"/>
