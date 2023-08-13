@@ -6,16 +6,19 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import org.osmdroid.config.Configuration
 import org.osmdroid.library.BuildConfig
-import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import ru.com.bulat.trackergps.MainApp
 import ru.com.bulat.trackergps.MainViewModel
+import ru.com.bulat.trackergps.R
 import ru.com.bulat.trackergps.databinding.FragmentViewTrackBinding
+import ru.com.bulat.trackergps.utils.ZoomUtil
 
 class ViewTrackFragment : Fragment() {
 
@@ -51,16 +54,42 @@ class ViewTrackFragment : Fragment() {
 
             val polyline = getPolyline(trackItem.geoPoints)
             map.overlays.add(polyline)
+
+            setMarkers(polyline.actualPoints)
             goToStartPosition(polyline)
         }
     }
 
     private fun goToStartPosition(polyline: Polyline) {
         val center = GeoPoint(polyline.bounds.centerLatitude, polyline.bounds.centerLongitude)
-        binding.map.controller.zoomTo(18.0)
+        binding.map.controller.zoomTo(14.0)
         binding.map.controller.animateTo(center)
 
-        //binding.map.zoomToBoundingBox(polyline.bounds, true)
+        val minGeo = GeoPoint(polyline.bounds.latNorth, polyline.bounds.lonWest)
+        val maxGeo = GeoPoint(polyline.bounds.latSouth, polyline.bounds.lonEast)
+
+        //ZoomUtil.zoomTo(binding.map, minGeo, maxGeo)
+
+        //binding.map.zoomToBoundingBox(binding.map.overlays[0].bounds, true)
+
+//        val test = binding.map.getIntrinsicScreenRect(null).height()
+//        binding.map.zoomToBoundingBox(polyline.bounds, true, 0, 10.0, null)
+    }
+
+    private fun setMarkers(list : List<GeoPoint>) = with (binding) {
+        val startMarker  = Marker (map)
+        val finishMarker  = Marker (map)
+
+        startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+        finishMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+        startMarker.position = list[0]
+        finishMarker.position = list[list.size-1]
+
+        startMarker.icon = getDrawable(requireContext(), R.drawable.ic_start)
+        finishMarker.icon = getDrawable(requireContext(), R.drawable.ic_finish)
+
+        map.overlays.add(startMarker)
+        map.overlays.add(finishMarker)
     }
 
     private fun getPolyline (strGeoPoints : String) : Polyline {
